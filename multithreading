@@ -1,0 +1,62 @@
+#include <pthread.h>
+#include <iostream>
+#include <string>
+#include <vector>
+
+struct arguments
+{
+	int value;
+	std::string binCode;
+};
+
+// Write the child thread function here
+void * dec2b(void * ptr){
+    arguments *arg = (arguments *)ptr;
+    int value = arg->value;
+    arg->binCode = "";
+    do{
+        arg->binCode = std::to_string(value % 2) + arg->binCode;
+        value = (value - value % 2) / 2 ;
+    }
+    while (value > 0); 
+    return nullptr;
+}
+
+
+int main()
+{
+    std::vector<arguments> arg;
+    arguments tempHolder;
+    tempHolder.binCode = "";
+	while (std::cin >> tempHolder.value)
+    {
+        arg.push_back(tempHolder);
+    }
+    int nValues = arg.size();
+ 	pthread_t *tid = new pthread_t[nValues];
+        
+	for(int i=0;i<nValues;i++)
+	{
+        
+		if(pthread_create(&tid[i], nullptr, dec2b, (void * )&arg[i]) != 0) 
+		{
+			std::cerr << "Error creating thread" << std::endl;
+			return 1;
+
+		}		
+	}
+	
+	// Wait for the other threads to finish.
+    // Call pthread_join here
+    for(int i=0;i<nValues;i++)
+        pthread_join(tid[i],nullptr);
+
+    
+    for (int i = 0; i < nValues; i++)
+    {
+        std::cout << arg[i].value << " base 10 is equal to " << arg[i].binCode << std::endl;
+    }
+    if (tid!=nullptr)
+        delete[] tid;
+    return 0;
+}
